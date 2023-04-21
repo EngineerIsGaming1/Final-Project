@@ -1,7 +1,11 @@
 import numpy as np
 import pygame
 from pygame.locals import *
- 
+
+class lineButton:
+    def __init__(self, x, y, orientation):
+        self.x
+
 class App:
     def __init__(self):
         pygame.init() #pygame.init initializes game module
