@@ -1,3 +1,13 @@
+# This thing is based on a not very good tutorial. This code will no longer be worked on.
+
+
+
+
+
+
+
+
+
 import numpy as np
 import pygame
 from pygame.locals import *
