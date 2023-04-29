@@ -68,6 +68,7 @@ def playerAction(boxes, color):
                 if curLine.rect.collidepoint(mousePos):
                     # if mouse is clicked and the clicked object hasn't been clicked yet, draw it and check if any new points have been scored
                     # statement waits .25s after completed action to ensure doubleclicks aren't registered
+                    # pygame.mouse.get_pressed returns a list. The only thing used is the first element which is true if the left mouse button has been pressed
                     if pygame.mouse.get_pressed()[0] == 1 and curLine.clicked == False:
                         curLine.clicked = True
                         curLine.draw(color)
@@ -198,6 +199,7 @@ while gameRunning:
     else:
         gameRunning = False
 
+    # limits FPS to 60
     gameClock.tick(60)
 
 endGame(gameDisplay, playerOneScore, playerTwoScore, screenSize)
