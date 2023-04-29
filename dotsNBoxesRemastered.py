@@ -138,10 +138,7 @@ def endGame(display, oneScore, twoScore, screenSize):
         textRect.center = (screenSize[0] // 2, screenSize[1] // 2)
         display.blit(text, textRect)
         pygame.display.update()
-        time.sleep(3)
-    
-    
-    
+        time.sleep(3)     
 
 # Function used to exit game properly. pygame.quit() uninitializes all pygame stuff and closes the game window
 def cleanupSequence():
@@ -154,15 +151,15 @@ def cleanupSequence():
 # do while loop that makes sure inputs are integers
 while True:
     numRows = input("Enter the number of rows to play: ")
-    numCols = input("Enter number of columns to play: ")
+    numCols = input("Enter the number of columns to play: ")
 
     if (numRows.isdigit() and numCols.isdigit()):
-        if(int(numRows) > 2 and int(numCols) > 2):
+        if(int(numRows) > 2 and int(numRows) < 15 and int(numCols) > 2 and int(numCols) < 15):
             numRows = int(numRows)
             numCols = int(numCols)
             break
         else:
-            print("Inputs must be greater than 2, try again\n")
+            print("Inputs must be greater than 2 and less than 15, try again\n")
     else:
         print("Inputs are not integers, try again\n")
         time.sleep(.25)
