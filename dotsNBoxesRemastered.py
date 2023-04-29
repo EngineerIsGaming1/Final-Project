@@ -28,7 +28,24 @@ def checkQuit(running):
     
     return(running)
 
-def playerOneAction(boxes):
+def checkBox(inputBox):
+    clickedBox = []
+    [clickedBox.append(curLine.clicked) for curLine in inputBox]
+
+    return(all(clickedBox))
+    
+def checkPoints(line, boxes):
+    score = 0
+
+    for curBox in boxes:
+        if line in curBox:
+            score += checkBox(curBox)
+
+    return(score)
+
+
+
+def playerAction(boxes, color):
     action = True
     
     while action:
@@ -40,35 +57,22 @@ def playerOneAction(boxes):
             if event.type == pygame.QUIT:
                 cleanupSequence()
 
-        mousePos = pygame.mouse.get_pos()
+        mousePos = pygame.mouse.get_pos() # gets mouse position using get_pos()
+        
+        # Nested for loop that indexes through individual elements of the list of boxes
         for curBox in boxes:
             for curLine in curBox:
+                # "rect" object has an attribute "collidepoint" that returns true or false based on the coordinates given
                 if curLine.rect.collidepoint(mousePos):
+                    # if mouse is clicked and the clicked line hasn't been clicked yet, draw it and end player action 
                     if pygame.mouse.get_pressed()[0] == 1 and curLine.clicked == False:
-                        curLine.clicked == True
-                        curLine.draw("Blue")
+                        curLine.clicked = True
+                        curLine.draw(color)
+                        points = checkPoints(curLine, boxes)
                         action = False
                         time.sleep(.25)
 
-# Clone of playeroneaction but passes a different color
-def playerTwoAction(boxes):
-    action = True
-    
-    while action:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                cleanupSequence()
-
-        mousePos = pygame.mouse.get_pos()
-        for curBox in boxes:
-            for curLine in curBox:
-                if curLine.rect.collidepoint(mousePos):
-                    if pygame.mouse.get_pressed()[0] == 1 and curLine.clicked == False:
-                        curLine.clicked == True
-                        curLine.draw("Red")
-                        action = False
-                        time.sleep(.25)
-
+    return(points)
 
 # StartupSequence sets up the playing board and returns an array of buttons that represent the possible player moves.
 def startupSequence(rows, cols, size, display):
@@ -84,12 +88,12 @@ def startupSequence(rows, cols, size, display):
     # Fills the display with white, then draws the dots onto the screen
     display.fill("white")
     [[pygame.draw.circle(display, "black", (dotCol, dotRow), 10) for dotCol in colArray] for dotRow in rowArray]
-    # pygame.draw.circle(surface, color, (center location in tuple), radius)
+    # how function works -> pygame.draw.circle(surface, color, (center location in tuple), radius)
 
     # creates a list of horizontal buttons. Indexes like matlab when only 1 dimension is given
     [[buttonArrayHoriz.append(lineButton(colArray[b] , rowArray[i] - 3, (colArray[b + 1] - colArray[b], 9), display)) \
-      for b in range(rows - 1)] for i in range(cols)]
-            # colArray[b + 1] - colArray[b] determines rectangle length, "5" is just the width I chose based on the circle's radius
+      for b in range(cols - 1)] for i in range(rows)]
+            # colArray[b + 1] - colArray[b] determines rectangle length, "9" is just the width I chose
             # Must be careful, coordinates go (x,y) but matrices go (row, col) which is (y,x)
             # display is just the game screen
 
@@ -103,11 +107,11 @@ def startupSequence(rows, cols, size, display):
                         buttonArrayHoriz[z + (cols - 1)], buttonArrayVert[z + (z//cols)]])
 
     
-    # # Testing function
+    # Testing function
     # for z in buttonArrayVert:
-    #     z.draw()
+    #     z.draw("black")
     # for o in buttonArrayHoriz:
-    #     o.draw() 
+    #     o.draw("black") 
 
 
     pygame.display.flip()
@@ -125,33 +129,40 @@ gameDisplay = pygame.display.set_mode(screenSize, pygame.HWSURFACE | pygame.DOUB
     # https://stackoverflow.com/questions/29135147/what-do-hwsurface-and-doublebuf-do
     # HWSURFACE -> hardware acceleration. DOUBLEBUF -> reduces artifacting by saving to vram
 
-# BUG TO FIX LATER
-# for some reason only square inputs work. Ex -> 4,6 doesn't work
+# Can cange numRows and numCols without anything breaking (probably)
+# Keeping it static for the sake of the project to stay consistent with game rules given by wikihow
+# Basically have to have a square playing field or else person who goes first has an unfair advantage
 numRows = 4
 numCols = 4
 totalMoves = 0
 gameClock = pygame.time.Clock()
+playerOneScore = 0
+playerTwoScore = 0
 
 boxList = startupSequence(numRows,numCols,screenSize, gameDisplay)
 
 while gameRunning:
     gameRunning = checkQuit(gameRunning)
 
-    playerOneAction(boxList)
-    playerTwoAction(boxList)
-
+    # Passing blue and red signifies the two different players' actions
+    playerOneScore += playerAction(boxList, "Blue")
+    print(playerOneScore)
+    playerTwoScore += playerAction(boxList, "Red")
+    print(playerTwoScore)
 
 
     
     totalMoves += 2
-    print(totalMoves)
+    # print(totalMoves)
 
     # this equation I got by doing algebra and then simplifying
     # rows*(col-1) + cols*(rows-1)
+    # This equation is used to find how many total moves there are, and end the gameloop
+    # once all possible moves have been made
     if (totalMoves >= (2 * (numRows * numCols) - numRows - numCols)):
         gameRunning = False
     
-    print(gameRunning)
+    # print(gameRunning)
     gameClock.tick(60)
 
 cleanupSequence()
