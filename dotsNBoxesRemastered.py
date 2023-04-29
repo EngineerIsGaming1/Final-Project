@@ -2,25 +2,27 @@ import numpy as np
 import pygame
 import time
 
-
-
+# Primary class used to make the game work
+# Functions like a button on screen that draws itself and changes attribute "clicked"
+# to true when a player clicks its location
 class lineButton:
+    # Constructor inputs:
+    # x,y: x,y location on the screen of class
+    # dimensions: a tuple containing the length and width of the class
+    # gameDisplay: a pygame object that represents the pygame window
     def __init__(self, x, y, dimensions, gameDisplay):
         self.rect = pygame.Rect((x,y), dimensions) 
-        # creates a pygame rectangle, passed values of (x,y) and dimensions (a tuple containing (length, width))
+        # creates a pygame object "Rect". Passed values of (x,y) and dimensions (a tuple containing (length, width))
         # determine location of topleft of rectangle and shape
         self.display = gameDisplay
         self.clicked = False
-    
+
+    # draws the rectangle with given color
     def draw(self, color):
-        # draws the rectangle
         pygame.draw.rect(self.display, color, self.rect)
         pygame.display.flip()
 
-    # # Testing function    
-    # def __str__(self):
-    #     return f"Button at {self.rect.topleft}"
-
+# Function used to see if users cliked the pygame window's "X" at any time
 def checkQuit(running):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -28,12 +30,14 @@ def checkQuit(running):
     
     return(running)
 
+# Function used to check if all elements of inputBox have been clicked
 def checkBox(inputBox):
     clickedBox = []
     [clickedBox.append(curLine.clicked) for curLine in inputBox]
 
-    return(all(clickedBox))
-    
+    return(all(clickedBox)) # all() returns True if all elements inside the given iterable are True
+
+# Function used to calculate any points gained by player action    
 def checkPoints(line, boxes):
     score = 0
 
@@ -44,15 +48,13 @@ def checkPoints(line, boxes):
     return(score)
 
 
-
+# Basic player action. "color" is used to represent which player took which action
 def playerAction(boxes, color):
     action = True
     
     while action:
         # This quit action has to be in any while loop or else pygame gets mad and crashes
-        # Idk why, and I don't really know how to fix it, so it's just going to be here
-        # This line also returns an error since the main gameloop wasn't stoppped before the
-        # pygame.quit() line was called, but it has to be here for the program to work :////
+        # Exiting before the main gameloop ends will intentionally report an error
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 cleanupSequence()
@@ -64,7 +66,8 @@ def playerAction(boxes, color):
             for curLine in curBox:
                 # "rect" object has an attribute "collidepoint" that returns true or false based on the coordinates given
                 if curLine.rect.collidepoint(mousePos):
-                    # if mouse is clicked and the clicked line hasn't been clicked yet, draw it and end player action 
+                    # if mouse is clicked and the clicked object hasn't been clicked yet, draw it and check if any new points have been scored
+                    # statement waits .25s after completed action to ensure doubleclicks aren't registered
                     if pygame.mouse.get_pressed()[0] == 1 and curLine.clicked == False:
                         curLine.clicked = True
                         curLine.draw(color)
@@ -103,24 +106,71 @@ def startupSequence(rows, cols, size, display):
     
     # creates a list of lists of all boxes in the playing area
     for z in range((rows - 1) * (cols - 1)):
-        boxList.append([buttonArrayHoriz[z], buttonArrayVert[z + 1 + (z//cols)],\
-                        buttonArrayHoriz[z + (cols - 1)], buttonArrayVert[z + (z//cols)]])
+        boxList.append([buttonArrayHoriz[z], buttonArrayVert[z + 1 + (z // (cols - 1))],\
+                        buttonArrayHoriz[z + (cols - 1)], buttonArrayVert[z + (z // (cols - 1))]])
 
-    
-    # Testing function
-    # for z in buttonArrayVert:
-    #     z.draw("black")
-    # for o in buttonArrayHoriz:
-    #     o.draw("black") 
-
-
-    pygame.display.flip()
-
+    pygame.display.flip() # pygame line that displays any changes made
     return(boxList)
 
+# Function used when game has ended. Displays which player won and what their score is
+def endGame(display, oneScore, twoScore, screenSize):
+    display.fill("white")
+    font = pygame.font.Font('freesansbold.ttf', 32)
+    if oneScore > twoScore:
+        # Code reused from # https://www.geeksforgeeks.org/python-display-text-to-pygame-window/
+        # Writes text in center of screen
+        text = font.render(f'Player one wins! Score: {oneScore}', True, "black", "white")
+        textRect = text.get_rect()
+        textRect.center = (screenSize[0] // 2, screenSize[1] // 2)
+        display.blit(text, textRect)
+        pygame.display.update()
+        time.sleep(3)
+    elif twoScore > oneScore:
+        text = font.render(f'Player two wins! Score: {twoScore}', True, "black", "white")
+        textRect = text.get_rect()
+        textRect.center = (screenSize[0] // 2, screenSize[1] // 2)
+        display.blit(text, textRect)
+        pygame.display.update()
+        time.sleep(3)
+    elif oneScore == twoScore:
+        text = font.render(f'Tie game! Scores: {oneScore}', True, "black", "white")
+        textRect = text.get_rect()
+        textRect.center = (screenSize[0] // 2, screenSize[1] // 2)
+        display.blit(text, textRect)
+        pygame.display.update()
+        time.sleep(3)
+    
+    
+    
+
+# Function used to exit game properly. pygame.quit() uninitializes all pygame stuff and closes the game window
 def cleanupSequence():
     print("Quitting game\n")
     pygame.quit()
+
+# MAIN FUNCTION STARTS BELOW
+# V V V V V V V V V V
+
+# do while loop that makes sure inputs are integers
+while True:
+    numRows = input("Enter the number of rows to play: ")
+    numCols = input("Enter number of columns to play: ")
+
+    if (numRows.isdigit() and numCols.isdigit()):
+        if(int(numRows) > 2 and int(numCols) > 2):
+            numRows = int(numRows)
+            numCols = int(numCols)
+            break
+        else:
+            print("Inputs must be greater than 2, try again\n")
+    else:
+        print("Inputs are not integers, try again\n")
+        time.sleep(.25)
+
+totalMoves = 0
+gameClock = pygame.time.Clock()
+playerOneScore = 0
+playerTwoScore = 0
 
 pygame.init() #pygame.init initializes game module
 gameRunning = True
@@ -128,41 +178,34 @@ screenSize = (840, 600)
 gameDisplay = pygame.display.set_mode(screenSize, pygame.HWSURFACE | pygame.DOUBLEBUF)
     # https://stackoverflow.com/questions/29135147/what-do-hwsurface-and-doublebuf-do
     # HWSURFACE -> hardware acceleration. DOUBLEBUF -> reduces artifacting by saving to vram
-
-# Can cange numRows and numCols without anything breaking (probably)
-# Keeping it static for the sake of the project to stay consistent with game rules given by wikihow
-# Basically have to have a square playing field or else person who goes first has an unfair advantage
-numRows = 4
-numCols = 4
-totalMoves = 0
-gameClock = pygame.time.Clock()
-playerOneScore = 0
-playerTwoScore = 0
-
+pygame.display.set_caption('Dots and Boxes')
 boxList = startupSequence(numRows,numCols,screenSize, gameDisplay)
 
+# The equation I use to see how many possible moves there are is: rows*(col-1) + cols*(rows-1) simplified
+# This equation is used to end the gameloop once all possible moves have been made
 while gameRunning:
+    # Checks if the "X" button is clicked at any time
+    # Required line for pygame to function properly
     gameRunning = checkQuit(gameRunning)
 
-    # Passing blue and red signifies the two different players' actions
-    playerOneScore += playerAction(boxList, "Blue")
-    print(playerOneScore)
-    playerTwoScore += playerAction(boxList, "Red")
-    print(playerTwoScore)
-
-
-    
-    totalMoves += 2
-    # print(totalMoves)
-
-    # this equation I got by doing algebra and then simplifying
-    # rows*(col-1) + cols*(rows-1)
-    # This equation is used to find how many total moves there are, and end the gameloop
-    # once all possible moves have been made
-    if (totalMoves >= (2 * (numRows * numCols) - numRows - numCols)):
+    # Nested if statments used to avoid the use of "break"
+    if (totalMoves < (2 * (numRows * numCols) - numRows - numCols)):
+        # Passing blue and red signifies the two different players' actions
+        playerOneScore += playerAction(boxList, "Blue")
+        totalMoves += 1
+        if (totalMoves < (2 * (numRows * numCols) - numRows - numCols)):
+            playerTwoScore += playerAction(boxList, "Red")
+            totalMoves += 1
+        else:
+            gameRunning = False
+    else:
         gameRunning = False
-    
-    # print(gameRunning)
+
     gameClock.tick(60)
 
+endGame(gameDisplay, playerOneScore, playerTwoScore, screenSize)
 cleanupSequence()
+
+
+# https://www.youtube.com/watch?v=G8MYGDf_9ho&t=879s
+# https://www.pygame.org/docs/
